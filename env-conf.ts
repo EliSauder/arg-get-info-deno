@@ -1,6 +1,7 @@
 import { loadEnv } from "https://deno.land/x/dotenvfile/mod.ts";
 
 interface IEnvStructure {
+    RefreshRateMin:number;
     Host:string;
     Port:number;
     Database: {
@@ -11,8 +12,6 @@ interface IEnvStructure {
         dialect:"postgres"|"mysql";
         host:string;
         port:number;
-        filepath:string;
-        uri:string;
     }
 }
 
