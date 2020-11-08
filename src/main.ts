@@ -1,11 +1,10 @@
 import { REGEX_FRAGMENT, SHEET_URL_1, SHEET_URL_2, GIF_REQUEST_URL_START, FILE_PATH } from "./const.ts"
-import { connection, fragmentFileRepository, fragmentRepository } from "../server.ts";
+import { fragmentFileRepository, fragmentRepository } from "../server.ts";
 import { Fragment } from "../entity/FragmentEntity.ts";
-import { isNull, isUndefined } from "https://deno.land/std@0.70.0/encoding/_yaml/utils.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 import { createHash } from "https://deno.land/std@0.67.0/hash/mod.ts";
-import { hash } from "https://denolib.com/denolib/typeorm@v0.2.23-rc9/src/util/StringUtils.ts";
 import { FragmentFile } from "../entity/FragmentFileEntity.ts";
+import { isUndefined } from "https://deno.land/std@0.70.0/encoding/_yaml/utils.ts";
 
 let refreshesInProgress = 0;
 
@@ -91,7 +90,7 @@ async function processFragmentFetch(fragment:Fragment) {
 
     } else {
         fragment.hasError = true;
-        fragment.error = response.statusText;
+        fragment.error = response.status + " - " + response.statusText;
 
         fragmentRepository.save(fragment);
     }

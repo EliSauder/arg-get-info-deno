@@ -5,6 +5,10 @@ import { Scheduler } from "./src/Scheduler.ts";
 import { main } from "./src/main.ts";
 import { Fragment } from "./entity/FragmentEntity.ts";
 import { FragmentFile } from "./entity/FragmentFileEntity.ts";
+import { ensureDir } from "https://deno.land/std@0.70.0/fs/ensure_dir.ts";
+import { FILE_PATH } from "./src/const.ts";
+
+await ensureDir(FILE_PATH);
 
 const app = new Application();
 

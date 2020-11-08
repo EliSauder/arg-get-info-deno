@@ -25,21 +25,23 @@ export class Scheduler {
         const finishTime = new Date();
         const duration = difference(finishTime, startTime, {units: ["minutes", "seconds", "milliseconds"]});
 
-        console.log(finishTime + ": Task completed - Duration (m:s:ms): " + duration.minutes + ":" + duration.seconds + ":" + duration.milliseconds);
-        console.log(finishTime + ": Creating timeout to run in " + this.refreshRate + "ms");
+        console.log(finishTime.toISOString() + ": Task completed - Duration (m:s:ms): " + duration.minutes + ":" + (duration.seconds! - (duration.minutes! * 60)) + ":" + (duration.milliseconds! - (duration.seconds! * 1000)));
 
-        this.timeoutId = setTimeout(async () => {
-            await this.run();
-        }, this.refreshRate);
+        if (this.isStarted) {
+            console.log(finishTime.toISOString() + ": Creating timeout to run in " + this.refreshRate + "ms");
+            this.timeoutId = setTimeout(async () => {
+                await this.run();
+            }, this.refreshRate);
+        }
     }
 
     stop():void {
         if (!this.isStarted) {
-            console.log(new Date().toISOString() + ": Task is already stopped");
+            console.log(new Date().toISOString() + ": Scheduler is already stopped");
             return;
         } 
 
-        console.log(new Date().toISOString() + "Stopping task");
+        console.log(new Date().toISOString() + "Unscheduling tasks");
         clearTimeout(this.timeoutId);
         this.isStarted = false;
     }
