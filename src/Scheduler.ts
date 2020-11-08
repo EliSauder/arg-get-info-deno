@@ -1,28 +1,35 @@
+import { difference } from "https://deno.land/std@0.76.0/datetime/mod.ts";
+
 export class Scheduler {
 
-    private callback:() => void;
+    private callback:() => Promise<unknown>;
     private refreshRate:number;
     private timeoutId:undefined|number;
     private isStarted:boolean;
 
-    constructor(task:() => void, refreshRate:number) {
+    constructor(task:() => Promise<unknown>, refreshRate:number) {
         this.isStarted = false;
         this.refreshRate = refreshRate  * 60 * 1000;
         this.callback = task;
     }
 
-    run():void {
+    async run() {
         this.isStarted = true;
 
-        console.log(new Date().toISOString() + ": Running task");
+        const startTime = new Date();
 
-        this.callback();
+        console.log(startTime.toISOString() + ": Running task");
 
-        console.log(new Date().toISOString() + ": Task completed");
-        console.log(new Date().toISOString() + ": Creating timeout to run in " + this.refreshRate + "ms");
+        await this.callback();
 
-        this.timeoutId = setTimeout(() => {
-            this.run();
+        const finishTime = new Date();
+        const duration = difference(finishTime, startTime, {units: ["minutes", "seconds", "milliseconds"]});
+
+        console.log(finishTime + ": Task completed - Duration (m:s:ms): " + duration.minutes + ":" + duration.seconds + ":" + duration.milliseconds);
+        console.log(finishTime + ": Creating timeout to run in " + this.refreshRate + "ms");
+
+        this.timeoutId = setTimeout(async () => {
+            await this.run();
         }, this.refreshRate);
     }
 

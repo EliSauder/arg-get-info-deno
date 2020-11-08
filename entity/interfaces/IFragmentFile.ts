@@ -2,7 +2,7 @@ import { IFragment } from "./IFragment.ts"
 
 export interface IFragmentFile {
     id:number;
-    fragment:IFragment|undefined;
+    fragment?:IFragment;
     filePath:string;
     fileType:string;
     md5:string;

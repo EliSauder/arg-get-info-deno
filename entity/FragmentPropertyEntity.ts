@@ -8,8 +8,8 @@ export class FragmentProperty implements IFragmentProperty {
     @PrimaryGeneratedColumn()
     id = 0;
 
-    @ManyToOne(type => Fragment, fragment => fragment.properties)
-    fragment = undefined;
+    @ManyToOne(type => Fragment, fragment => fragment.properties, {nullable: false})
+    fragment?:Fragment = undefined;
 
     @Column({type:"varchar", length:128, nullable: false})
     name = "";

@@ -1,4 +1,4 @@
-import {Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "https://denolib.com/denolib/typeorm@v0.2.23-rc9/mod.ts";
+import {Check, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "https://denolib.com/denolib/typeorm@v0.2.23-rc9/mod.ts";
 import { IFragmentFile } from "./interfaces/IFragmentFile.ts";
 import { Fragment } from "./FragmentEntity.ts";
 
@@ -8,9 +8,9 @@ export class FragmentFile implements IFragmentFile {
     @PrimaryGeneratedColumn()
     id = 0;
 
-    @OneToOne(type => Fragment, fragment => fragment.fileInfo)
+    @OneToOne(type => Fragment, fragment => fragment.fileInfo, { nullable: false})
     @JoinColumn()
-    fragment = undefined;
+    fragment?:Fragment;
 
     @Column({type:"varchar", length: 512, nullable: false})
     filePath = "";

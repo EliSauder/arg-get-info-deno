@@ -2,6 +2,9 @@ import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import { createConnection } from "https://denolib.com/denolib/typeorm@v0.2.23-rc9/src/index.ts";
 import { env } from "./env-conf.ts";
 import { Scheduler } from "./src/Scheduler.ts";
+import { main } from "./src/main.ts";
+import { Fragment } from "./entity/FragmentEntity.ts";
+import { FragmentFile } from "./entity/FragmentFileEntity.ts";
 
 const app = new Application();
 
@@ -10,13 +13,9 @@ const router = new Router();
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-const refreshProcess:Scheduler = new Scheduler(() => {
+const refreshProcess:Scheduler = new Scheduler(main, env.RefreshRateMin);
 
-    console.log("Running");
-
-}, env.RefreshRateMin);
-
-await createConnection({
+export const connection = await createConnection({
     type: env.Database.dialect,
     host: env.Database.host,
     port: env.Database.port,
@@ -35,4 +34,7 @@ await createConnection({
     synchronize: true
 });
 
-refreshProcess.run();
+export const fragmentRepository = connection.getRepository(Fragment);
+export const fragmentFileRepository = connection.getRepository(FragmentFile);
+
+await refreshProcess.run();
