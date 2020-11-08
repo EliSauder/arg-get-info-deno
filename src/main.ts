@@ -16,12 +16,7 @@ export async function main() {
     }
 
     try {
-        await Promise.all(
-            [ 
-                fetchSheetInfo(SHEET_URL_1),
-                fetchSheetInfo(SHEET_URL_2)
-            ]
-        );
+        await Promise.all([fetchSheetInfo(SHEET_URL_1), fetchSheetInfo(SHEET_URL_2)]);
     }
     catch (error) {
         console.log("Error requesting sheets: main()");
