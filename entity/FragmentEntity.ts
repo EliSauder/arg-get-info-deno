@@ -4,7 +4,7 @@ import { FragmentFile } from "./FragmentFileEntity.ts";
 import { IFragment } from "./interfaces/IFragment.ts";
 
 @Entity()
-@Unique("fragment_version", ["fragment", "version"])
+@Unique("fragment_version", ["fragment", "version", "layer"])
 export class Fragment implements IFragment {
 
     @PrimaryGeneratedColumn()
@@ -15,6 +15,9 @@ export class Fragment implements IFragment {
 
     @Column({type: "integer", nullable: false, update: false})
     version = 0;
+
+    @Column({type: "integer", nullable: false, update: false})
+    layer = 0;
 
     @Column({type:"boolean", nullable: true, update: true, default: false})
     hasError = false;

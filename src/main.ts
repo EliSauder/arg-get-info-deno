@@ -1,4 +1,4 @@
-import { REGEX_FRAGMENT, SHEET_URL_1, SHEET_URL_2, GIF_REQUEST_URL_START, FILE_PATH } from "./const.ts"
+import { REGEX_FRAGMENT, SHEETS, GIF_REQUEST_URL_START, FILE_PATH, REGEX_FRAGMENT_FRAGMENT, REGEX_FRAGMENT_LAYER, REGEX_FRAGMENT_VERSION } from "./const.ts"
 import { fragmentFileRepository, fragmentRepository } from "../server.ts";
 import { Fragment } from "../entity/FragmentEntity.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
@@ -16,7 +16,14 @@ export async function main() {
     }
 
     try {
-        await Promise.all([fetchSheetInfo(SHEET_URL_1), fetchSheetInfo(SHEET_URL_2)]);
+
+        const promises:Promise<unknown>[] = [];
+
+        for(let i = 0; i < SHEETS.length; i++) {
+            promises.push(fetchSheetInfo(SHEETS[i]))
+        }
+
+        await Promise.all(promises);
     }
     catch (error) {
         console.log("Error requesting sheets: main()");
@@ -47,13 +54,28 @@ async function processSheetInfo(res:Response) {
     for (let i = 0; count < matchAll.length; i++) {
         const match = matchAll[i];
         count++;
-        await processResultMatch(match[2], isUndefined(match[1]) ? 1 : parseInt(match[1]));
+        const fragment = match[REGEX_FRAGMENT_FRAGMENT];
+        const version = isUndefined(match[REGEX_FRAGMENT_VERSION]) ? 1 : parseInt(match[REGEX_FRAGMENT_VERSION]);
+        const layerString = match[REGEX_FRAGMENT_LAYER];
+        
+        let layer:number = 0;
+
+        if (isUndefined(layerString)) {
+            layer = 1;
+        } else {
+            let charLayer:number = layerString.toLowerCase().charCodeAt(0);
+            charLayer = charLayer - 97 + 1;
+
+            layer = charLayer;
+        }
+
+        await processResultMatch(fragment, version, layer);
     }
 
     refreshesInProgress--;
 }
 
-async function processResultMatch(fragment:string, version:number) {
+async function processResultMatch(fragment:string, version:number, layer:number) {
 
     const fragmentEntity = await fragmentRepository.findOne({ where: {fragment: fragment, version: version}});
 
@@ -62,6 +84,7 @@ async function processResultMatch(fragment:string, version:number) {
         const fragmentEntityNew = new Fragment();
         fragmentEntityNew.fragment = fragment;
         fragmentEntityNew.version = version;
+        fragmentEntityNew.layer = layer;
 
         const createdFragment:Fragment = await fragmentRepository.save(fragmentEntityNew);
         
@@ -93,7 +116,7 @@ async function processFragmentFetch(fragment:Fragment) {
 
 async function processFragmentFile(fragment:Fragment, data:Uint8Array, contentType:string|null) {
 
-    const filePath = path.join(FILE_PATH, `/${fragment.fragment}_v${fragment.version}.gif`);
+    const filePath = path.join(FILE_PATH, `/${fragment.fragment}_v${fragment.version}_l${fragment.layer}.gif`);
 
     await Deno.writeFile(filePath, data);
 
