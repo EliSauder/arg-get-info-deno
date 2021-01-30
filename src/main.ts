@@ -4,7 +4,7 @@ import { Fragment } from "../entity/FragmentEntity.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 import { createHash } from "https://deno.land/std@0.67.0/hash/mod.ts";
 import { FragmentFile } from "../entity/FragmentFileEntity.ts";
-import { isUndefined } from "https://deno.land/std@0.70.0/encoding/_yaml/utils.ts";
+import { isNull, isUndefined } from "https://deno.land/std@0.70.0/encoding/_yaml/utils.ts";
 
 let refreshesInProgress = 0;
 
@@ -77,7 +77,7 @@ async function processSheetInfo(res:Response) {
 
 async function processResultMatch(fragment:string, version:number, layer:number) {
 
-    const fragmentEntity = await fragmentRepository.findOne({ where: {fragment: fragment, version: version}});
+    const fragmentEntity = await fragmentRepository.findOne({ where: {fragment: fragment, version: version, layer: layer}, relations:["fileInfo"]});
 
     if (isUndefined(fragmentEntity)) {
 
@@ -89,6 +89,9 @@ async function processResultMatch(fragment:string, version:number, layer:number)
         const createdFragment:Fragment = await fragmentRepository.save(fragmentEntityNew);
         
         await processFragmentFetch(createdFragment);
+
+    } else if ((isUndefined(fragmentEntity.fileInfo) || isNull(fragmentEntity.fileInfo))&& fragmentEntity.timesTried < 3) {
+        await processFragmentFetch(fragmentEntity);
     }
 }
 
@@ -98,19 +101,30 @@ async function processFragmentFetch(fragment:Fragment) {
     if (fragment.version == 1) {
         requestUrl = `${requestUrl}${fragment.fragment}.gif`;
     } else {
-        requestUrl = `${requestUrl}v${fragment.version}_${fragment.fragment}.gif`;
+        if (fragment.layer > 1) {
+            requestUrl = `${requestUrl}v${fragment.version}${String.fromCharCode(fragment.layer + 97 - 1)}_${fragment.fragment}.gif`;
+        } else {
+            requestUrl = `${requestUrl}v${fragment.version}_${fragment.fragment}.gif`;
+        }
     }
 
     const response = await fetch(requestUrl);
 
     if (response.status > 100 && response.status < 299) {
+
+        if (fragment.hasError) {
+            fragment.hasError = false;
+            fragment.error = null;
+            await fragmentRepository.save(fragment);
+        }
+        
         await processFragmentFile(fragment, new Uint8Array(await response.arrayBuffer()), response.headers.get("content-type"));
 
     } else {
         fragment.hasError = true;
         fragment.error = response.status + " - " + response.statusText;
-
-        fragmentRepository.save(fragment);
+        fragment.timesTried++;
+        await fragmentRepository.save(fragment);
     }
 }
 
@@ -136,6 +150,6 @@ async function processFragmentFile(fragment:Fragment, data:Uint8Array, contentTy
 
     fragment.fileInfo = fragmentFile;
 
-    fragmentRepository.save(fragment);
-    fragmentFileRepository.save(fragmentFile);
+    await fragmentRepository.save(fragment);
+    await fragmentFileRepository.save(fragmentFile);
 }
